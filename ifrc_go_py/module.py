@@ -5,6 +5,9 @@ import geopandas as gpd
 import pandas as pd
 from collections import Counter
 
+class InvalidDateFormatError(Exception):
+    pass
+
 class SurgeAlert:
     def __init__(self, alert_id, message, molnix_id, created_at, opens, closes, start, end, region, modality, sector, scope, language, rotation, event_name, event_id, country_code):
         self.alert_id = alert_id
@@ -27,7 +30,7 @@ class SurgeAlert:
         
     def __repr__(self):
         return f"SurgeAlert(alert_id={self.alert_id}, message={self.message})"
-
+    
 class Appeal:
     def __init__(self, aid, name, atype, atype_display, status, status_display, code, sector, num_beneficiaries, amount_requested, amount_funded, start_date, end_date, created_at, event, dtype_name, country_iso3, country_society_name):
         self.aid = aid
@@ -48,8 +51,8 @@ class Appeal:
         self.dtype_name = dtype_name
         self.country_iso3 = country_iso3
         self.country_society_name = country_society_name
-
-def get_latest_appeals(atype=None):
+        
+def get_latest_appeals(atype=None, start_date=None, end_date=None, emergency_type=None):
     """
     Returns the 50 latest appeals, with option to filter by appeal type.
     
@@ -60,18 +63,73 @@ def get_latest_appeals(atype=None):
     
             If provided, filters the appeals based on the specified type. 
             Defaults to None, retrieving all appeals if no type is specified.
+        
+        start_date (datetime or None, optional): The min start date to filter by.
+            Format as %Y-%m-%d (e.g. 2024-01-01)
+        
+        end_date (datetime or None, optional): The max end date to filter by.
+            Format as %Y-%m-%d (e.g. 2024-01-01)
+            
+        emergency_type (int or None, optional): Use the IFRC emergency type to filter by.
+            66	Biological
+            57	Chemical
+            7	Civil Unrest
+            14	Cold Wave
+            6	Complex Emergency
+            4	Cyclone
+            20	Drought
+            2	Earthquake
+            1	Epidemic
+            15	Fire
+            12	Flood
+            21	Food Insecurity
+            19	Heat Wave
+            62	Insect Infestation
+            24	Landslide
+            13	Other
+            27	Pluvial/Flash Flood
+            5	Population Movement
+            67	Radiological
+            23	Storm Surge
+            54	Transport Accident
+            68	Transport Emergency
+            11	Tsunami
+            8	Volcanic Eruption
     
     >>> get_latest_appeals()
     [Appeal(alert_id=18541, message=Humanitarian Diplomacy Coordinator, Middle East Crisis, MENA), SurgeAlert(alert_id=18540, message=Finance Officer, Hurricane Otis, Mexico.)...]
     """
     
+    api_call = 'https://goadmin.ifrc.org/api/v2/appeal'
+    
+    params = []
+
     if atype is not None:
-        api_call = f'https://goadmin.ifrc.org/api/v2/appeal/?atype={atype}'
-    else:
-        api_call = 'https://goadmin.ifrc.org/api/v2/appeal/'
+        params.append(f'atype={atype}')
+        
+    if start_date is not None:
+        if len(start_date) != 10:
+            raise InvalidDateFormatError("Start date should be in '%Y-%m-%d' format, like 2020-04-04.")
+        else:
+            start_date = start_date + 'T00:00:00Z'
+            params.append(f'start_date__gt={start_date}')
+        
+    if end_date is not None:
+        if len(end_date) != 10:
+            raise InvalidDateFormatError("End date should be in '%Y-%m-%d' format, like 2020-04-04.")
+        else:
+            end_date = end_date + 'T00:00:00Z'
+            params.append(f'end_date__lt={end_date}')
+        
+    if emergency_type is not None:
+        params.append(f'dtype={emergency_type}')
+        
+    if params:
+        api_call += '?' + '&'.join(params)
+        
+    print(api_call)
     
     r = requests.get(api_call).json()
-    print(r)
     appeals = []
     
     for result in r['results']:
@@ -98,7 +156,7 @@ def get_latest_appeals(atype=None):
         # create appeal object and append to appeals list
         appeal = Appeal(aid, name, atype, atype_display, status, status_display, code, sector, num_beneficiaries, amount_requested, amount_funded, start_date, end_date, created_at, event, dtype_name, country_iso3, country_society_name)
         appeals.append(appeal)
-
+        
         
     return appeals
 
