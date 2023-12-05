@@ -5,7 +5,7 @@ with open('README.md', encoding='utf-8') as f:
 
 setup(
     name='ifrc_go_py',
-    version='0.0.7',
+    version='0.0.8',
     description='A library for working with IFRC GO data.',
     author='Jonathan Garro',
     author_email='jonathan.garro@gmail.com',
