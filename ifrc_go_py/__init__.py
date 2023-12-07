@@ -1,1 +1,1 @@
-from .module import get_latest_appeals, get_latest_surge_alerts, SurgeAlert, Appeal
+from .module import SurgeAlert, Appeal, get_all_appeals, search_appeals, plot_countries_by_iso3
