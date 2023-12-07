@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import geopandas as gpd
 import pandas as pd
 from collections import Counter
+from datetime import datetime
 
 class InvalidDateFormatError(Exception):
     pass
@@ -29,7 +30,7 @@ class SurgeAlert:
         self.country_code = country_code
         
     def __repr__(self):
-        return f"SurgeAlert(alert_id={self.alert_id}, message={self.message})"
+        return f"SurgeAlert(alert_id={self.alert_id}, {self.message})"
     
 class Appeal:
     def __init__(self, aid, name, atype, atype_display, status, status_display, code, sector, num_beneficiaries, amount_requested, amount_funded, start_date, end_date, created_at, event, dtype_name, country_iso3, country_society_name):
@@ -51,10 +52,42 @@ class Appeal:
         self.dtype_name = dtype_name
         self.country_iso3 = country_iso3
         self.country_society_name = country_society_name
-        
-def get_latest_appeals(atype=None, start_date=None, end_date=None, emergency_type=None):
+
+def get_all_appeals():
     """
     Returns the 50 latest appeals, with option to filter by appeal type.
+    
+    """
+    api_call = 'https://goadmin.ifrc.org/api/v2/appeal'
+    appeals = []
+    current_page = 0
+    print("Grabbing all appeals. This requires looping over several dozen pages of results, so it may take some time.")
+    
+    while api_call:
+        current_page += 1
+        print(f"Fetching page {current_page} from {api_call}") 
+        
+        response = requests.get(api_call).json()
+        results = response.get('results', [])
+        
+        for result in results:
+            appeal = Appeal(
+                result.get('aid'), result.get('name'), result.get('atype'), result.get('atype_display'),
+                result.get('status'), result.get('status_display'), result.get('code'), result.get('sector'),
+                result.get('num_beneficiaries'), result.get('amount_requested'), result.get('amount_funded'),
+                result.get('start_date'), result.get('end_date'), result.get('created_at'), result.get('event'),
+                result.get('dtype_name'), result.get('country', {}).get('iso3'),
+                result.get('country', {}).get('society_name')
+            )
+            appeals.append(appeal)
+            
+        api_call = response.get('next')  # fetch next page URL
+        
+    return appeals
+
+def search_appeals(atype=None, start_date=None, end_date=None, emergency_type=None):
+    """
+    Returns appeals matching the search criteria passed as arguments.
     
     Args:
         atype (int or None, optional): The appeal type to filter the appeals. 
@@ -64,13 +97,13 @@ def get_latest_appeals(atype=None, start_date=None, end_date=None, emergency_typ
             If provided, filters the appeals based on the specified type. 
             Defaults to None, retrieving all appeals if no type is specified.
         
-        start_date (datetime or None, optional): The min start date to filter by.
-            Format as %Y-%m-%d (e.g. 2024-01-01)
+        start_date (str or None, optional): The min start date to filter by.
+            Format as %Y-%m-%d (e.g. "2024-01-01")
         
-        end_date (datetime or None, optional): The max end date to filter by.
-            Format as %Y-%m-%d (e.g. 2024-01-01)
+        end_date (str or None, optional): The max end date to filter by.
+            Format as %Y-%m-%d (e.g. "2024-01-01")
             
-        emergency_type (int or None, optional): Use the IFRC emergency type to filter by.
+        emergency_type (int or None, optional): Use the IFRC emergency type to filter:
             66	Biological
             57	Chemical
             7	Civil Unrest
@@ -207,5 +240,5 @@ def plot_countries_by_iso3(appeals):
     # filter out antarctica
     world_iso3[world_iso3['Appeal_Count'] == 0].plot(ax=ax, color='lightgrey')
     
-    plt.tight_layout()  # Adjust layout for better visualization
+    plt.tight_layout()  # this removes the spacing and border around the map
     plt.show()
