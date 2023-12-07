@@ -104,33 +104,30 @@ def search_appeals(atype=None, start_date=None, end_date=None, emergency_type=No
             Format as %Y-%m-%d (e.g. "2024-01-01")
             
         emergency_type (int or None, optional): Use the IFRC emergency type to filter:
-            66	Biological
-            57	Chemical
-            7	Civil Unrest
-            14	Cold Wave
-            6	Complex Emergency
-            4	Cyclone
-            20	Drought
-            2	Earthquake
-            1	Epidemic
-            15	Fire
-            12	Flood
-            21	Food Insecurity
-            19	Heat Wave
-            62	Insect Infestation
-            24	Landslide
-            13	Other
-            27	Pluvial/Flash Flood
-            5	Population Movement
-            67	Radiological
-            23	Storm Surge
-            54	Transport Accident
-            68	Transport Emergency
-            11	Tsunami
-            8	Volcanic Eruption
-    
-    >>> get_latest_appeals()
-    [Appeal(alert_id=18541, message=Humanitarian Diplomacy Coordinator, Middle East Crisis, MENA), SurgeAlert(alert_id=18540, message=Finance Officer, Hurricane Otis, Mexico.)...]
+            (66	Biological)
+            (57	Chemical)
+            (7	Civil Unrest)
+            (14	Cold Wave)
+            (6	Complex Emergency)
+            (4	Cyclone)
+            (20	Drought)
+            (2	Earthquake)
+            (1	Epidemic)
+            (15	Fire)
+            (12	Flood)
+            (21	Food Insecurity)
+            (19	Heat Wave)
+            (62	Insect Infestation)
+            (24	Landslide)
+            (13	Other)
+            (27	Pluvial/Flash Flood)
+            (5	Population Movement)
+            (67	Radiological)
+            (23	Storm Surge)
+            (54	Transport Accident)
+            (68	Transport Emergency)
+            (11	Tsunami)
+            (8	Volcanic Eruption)
     """
     
     api_call = 'https://goadmin.ifrc.org/api/v2/appeal'
